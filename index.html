@@ -299,6 +299,38 @@
   }
 
   .plan-section .clinic-bar { margin-bottom: 1.25rem; }
+
+  .view-toggle {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .toggle-btn {
+    border: none;
+    background: #fff;
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.5rem 0.9rem;
+    cursor: pointer;
+  }
+
+  .toggle-btn.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  @media print {
+    .view-toggle { display: none !important; }
+  }
+
+  .therapist-only { }
+  .patient-only-label { display: none; }
+  body.patient-view .therapist-only { display: none !important; }
+  body.patient-view .patient-only-label { display: inline; }
 </style>
 </head>
 <body>
@@ -314,7 +346,10 @@
 
 <main>
   <section class="panel" id="builderPanel">
-    <h2>1. Consultation details</h2>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+      <h2 style="margin:0;">1. Consultation details</h2>
+      <button class="btn btn-secondary" id="loadExampleBtn" type="button">Load example</button>
+    </div>
 
     <div class="grid-2">
       <div class="field">
@@ -352,8 +387,16 @@
       <span class="clinic-name">Aesthetique Clinic</span>
     </div>
     <div class="plan-header">
-      <h2>Treatment Plan</h2>
-      <div class="plan-meta" id="planMeta"></div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.75rem;">
+        <div>
+          <h2>Treatment Plan</h2>
+          <div class="plan-meta" id="planMeta"></div>
+        </div>
+        <div class="view-toggle">
+          <button type="button" class="toggle-btn active" data-view="practitioner">Practitioner view</button>
+          <button type="button" class="toggle-btn" data-view="patient">Patient view</button>
+        </div>
+      </div>
     </div>
 
     <div class="plan-section">
@@ -558,6 +601,7 @@
   const editBtn = document.getElementById("editBtn");
   const builderPanel = document.getElementById("builderPanel");
   const planOutput = document.getElementById("planOutput");
+  const loadExampleBtn = document.getElementById("loadExampleBtn");
 
   // Populate practitioner dropdown
   PRACTITIONERS.forEach(p => {
@@ -719,7 +763,8 @@
           ${t.proofPoints.map(pt => `<li>${pt}</li>`).join("")}
         </ul>
         <div class="price-row">
-          <span>${tierLabel}</span>
+          <span class="therapist-only">${tierLabel}</span>
+          <span class="patient-only-label">Price</span>
           <strong>£${price.toFixed(2)}</strong>
         </div>
       `;
@@ -739,6 +784,8 @@
 
     builderPanel.style.display = "none";
     planOutput.style.display = "block";
+    document.body.classList.remove("patient-view");
+    document.querySelectorAll(".toggle-btn").forEach(b => b.classList.toggle("active", b.dataset.view === "practitioner"));
     window.scrollTo(0, 0);
   };
 
@@ -748,6 +795,47 @@
     builderPanel.style.display = "block";
     planOutput.style.display = "none";
     window.scrollTo(0, 0);
+  };
+
+  // View toggle (practitioner vs patient)
+  document.querySelectorAll(".toggle-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".toggle-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.body.classList.toggle("patient-view", btn.dataset.view === "patient");
+    });
+  });
+
+  // Load example consultation
+  loadExampleBtn.onclick = () => {
+    practitionerSelect.value = "prac_01";
+    document.getElementById("patientName").value = "Joyce Tan";
+    document.getElementById("patientConcerns").value =
+      "Fine lines and wrinkles on the upper face, particularly around the forehead and eyes. Also keen to improve overall skin texture and radiance.";
+    document.getElementById("planNotes").value =
+      "Recommend follow-up appointment in 4 weeks to assess results before planning next steps.";
+
+    // Clear existing rows and add example rows
+    treatmentRows.innerHTML = "";
+    createTreatmentRow();
+    createTreatmentRow();
+    createTreatmentRow();
+
+    const rows = treatmentRows.querySelectorAll(".treatment-row");
+
+    // Row 1: Botox - priority
+    rows[0].querySelectorAll("select")[0].value = "tx_003";
+    rows[0].querySelectorAll("select")[0].dispatchEvent(new Event("change"));
+    rows[0].querySelector(".priority-input").checked = true;
+
+    // Row 2: Microneedling - therapist price
+    rows[1].querySelectorAll("select")[0].value = "tx_001";
+    rows[1].querySelectorAll("select")[0].dispatchEvent(new Event("change"));
+    rows[1].querySelectorAll("select")[1].value = "therapist";
+
+    // Row 3: HydraFacial
+    rows[2].querySelectorAll("select")[0].value = "tx_007";
+    rows[2].querySelectorAll("select")[0].dispatchEvent(new Event("change"));
   };
 </script>
 
