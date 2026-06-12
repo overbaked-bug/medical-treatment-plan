@@ -1,63 +1,52 @@
 # Treatment Plan Generator
 
-A simple static web app for practitioners to generate patient treatment plans from a shared treatment catalog, with practitioner-specific pricing.
+A front-end web app that lets aesthetic clinic practitioners build patient treatment plans on the fly — selecting recommended treatments from a catalog, choosing role-based pricing, and generating a clean, printable summary to share with patients.
 
-## How it works
+**[Live demo →](#)** *(add your GitHub Pages link here)*
 
-1. Practitioner selects their name and enters the patient's name and concerns.
-2. Practitioner selects one or more treatments from the dropdown(s).
-3. App pulls treatment details (proof points, pain level, downtime, duration) from `catalog.js`.
-4. App pulls pricing from `practitioner-pricing.js` (falls back to the catalog's base price if no override exists).
-5. Clicking **Generate treatment plan** produces a plan with:
-   - Consultation summary
-   - Patient concerns (free text entered before generation)
-   - Recommended treatments with full details and pricing
-   - Total estimated price
-6. Plan can be printed / saved as PDF directly from the browser.
+## Why I built this
+
+Clinics often hand-write or copy-paste treatment plans during consultations, which is slow and inconsistent. This app turns that into a guided, dropdown-driven workflow: pick the practitioner, note the patient's concerns, select recommended treatments, and instantly generate a structured plan with proof points, pain levels, downtime, and pricing — ready to print or save as a PDF.
+
+## Key features
+
+- **Treatment catalog** — centralised data for each treatment (category, benefits, pain level, downtime, duration, base price)
+- **Role-based pricing** — practitioners can select "Practitioner price" or "Therapist price" per treatment, with business rules enforced (e.g. injectables are practitioner-only, reflecting real scope-of-practice constraints)
+- **Dynamic plan generation** — consultation summary, patient concerns, and itemised treatment recommendations are assembled automatically from form inputs
+- **Print/PDF export** — one-click print view styled separately from the builder UI
+- **Branded layout** — clinic logo and name displayed across the app and generated plans
+
+## Tech stack
+
+- Vanilla HTML, CSS, and JavaScript — no frameworks or build tools
+- Data-driven UI: catalog and pricing are structured as JS objects, making the app easy to extend without touching the rendering logic
+- Print-specific CSS (`@media print`) for clean PDF output
+
+## What this demonstrates
+
+- Translating a real-world workflow (clinical consultation → treatment plan) into a usable UI
+- Structuring reusable data models (treatment catalog, practitioner pricing) separate from presentation logic
+- Implementing conditional UI logic based on business rules (role-based pricing, category restrictions)
+- Building responsive, print-aware layouts with plain CSS
+
+## Running locally
+
+This is a static site — no build step or dependencies required.
+
+1. Clone or download this repository
+2. Open `index.html` in a browser
 
 ## File structure
 
 ```
-├── index.html              # Main app (UI + logic)
-├── catalog.js               # Master treatment catalog (shared across all practitioners)
-├── practitioner-pricing.js  # Practitioner-specific pricing overrides
+├── index.html   # App UI, styles, and logic (treatment catalog and pricing data included)
+├── logo.svg     # Clinic logo
 └── README.md
 ```
 
-## Editing the treatment catalog
+## Possible extensions
 
-Open `catalog.js` and add/edit entries in the `TREATMENT_CATALOG` array. Each treatment needs:
-
-| Field        | Description                                  |
-|--------------|-----------------------------------------------|
-| `id`         | Unique ID, e.g. `tx_009`                      |
-| `name`       | Treatment name                                |
-| `category`   | Grouping shown in the dropdown                |
-| `proofPoints`| Array of short benefit statements             |
-| `painLevel`  | 1 (none) to 5 (high)                          |
-| `downtime`   | Recovery description                          |
-| `duration`   | Appointment length                            |
-| `basePrice`  | Fallback price if no practitioner price set   |
-
-## Editing practitioner pricing
-
-Open `practitioner-pricing.js` and edit the `PRACTITIONERS` array.
-
-- `practitionerPrice` — the price charged to the patient
-- `therapistPrice` — 70% of `practitionerPrice`, stored explicitly (not auto-calculated at runtime, so past plans stay accurate if prices change)
-
-Use the included `calcTherapistPrice(practitionerPrice)` helper to compute the 70% value when adding new entries.
-
-To add a new practitioner, copy an existing block and update `practitionerId`, `name`, and `pricing`.
-
-## Hosting on GitHub Pages
-
-1. Push this folder to a GitHub repository.
-2. Go to **Settings → Pages**.
-3. Under "Build and deployment", select **Deploy from a branch**, choose `main` and `/ (root)`.
-4. Your app will be live at `https://<username>.github.io/<repo-name>/`.
-
-## Notes
-
-- All data is currently hardcoded in JS files for simplicity — no backend or database required.
-- Prices are shown in RM (Malaysian Ringgit); change the currency label in `index.html` if needed.
+- Connect to a real backend/database for multi-clinic, multi-user data
+- Add authentication so practitioners only see their own pricing
+- Export to branded PDF templates rather than browser print
+- Track generated plans for reporting/analytics
