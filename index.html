@@ -1248,8 +1248,9 @@ document.getElementById('generateBtn').onclick = () => {
 
   const sortedRows = [...selectedRows].sort((a,b) => (b.priority?1:0)-(a.priority?1:0));
   const treatmentNames = sortedRows.map(r => TREATMENT_CATALOG.find(t => t.id === r.treatmentId).name);
-  const concernPhrase = concerns ? concerns.charAt(0).toLowerCase() + concerns.slice(1) : 'the concerns discussed during your consultation';
-  const consultSummary = `To address ${concernPhrase}, I've recommended ${treatmentNames.length} treatment${treatmentNames.length>1?'s':''}: ${treatmentNames.join(', ')}. Each option below is tailored to target these concerns, with details on what to expect, recovery time, and pricing to help you decide what works best for you.`;
+  const concernPhrase = concerns ? concerns.replace(/[.!?,;]+$/, '').charAt(0).toLowerCase() + concerns.replace(/[.!?,;]+$/, '').slice(1) : 'the concerns raised during your consultation';
+  const txList = treatmentNames.length === 1 ? treatmentNames[0] : treatmentNames.slice(0, -1).join(', ') + ' and ' + treatmentNames[treatmentNames.length - 1];
+  const consultSummary = `Based on your consultation, I've recommended ${treatmentNames.length} treatment${treatmentNames.length > 1 ? 's' : ''} — ${txList} — to address ${concernPhrase}. Each option below includes what to expect, recovery time, and pricing to help you decide what works best for you.`;
 
   document.getElementById('consultSummary').textContent = consultSummary;
   document.getElementById('concernText').textContent = concerns || 'No specific concerns recorded.';
