@@ -2,7 +2,7 @@
 
 A front-end web app that lets aesthetic clinic practitioners build patient treatment plans on the fly — selecting recommended treatments from a catalog, choosing role-based pricing, and generating a clean, printable summary to share with patients.
 
-**[Live demo →](#)** *(add your GitHub Pages link here)*
+**[Live demo →](#)** (https://overbaked-bug.github.io/medical-treatment-plan/)
 
 ## Why I built this
 
