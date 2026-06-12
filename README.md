@@ -2,7 +2,8 @@
 
 A front-end web app that lets aesthetic clinic practitioners build patient treatment plans on the fly — selecting recommended treatments from a catalog, choosing role-based pricing, and generating a clean, printable summary to share with patients.
 
-**[Live demo →](#)** (https://overbaked-bug.github.io/medical-treatment-plan/)
+**[Live demo →]**
+*(replace with your GitHub Pages URL after deploying — see "Deploying" below)*
 
 ## Why I built this
 
@@ -28,6 +29,14 @@ Clinics often hand-write or copy-paste treatment plans during consultations, whi
 - Structuring reusable data models (treatment catalog, practitioner pricing) separate from presentation logic
 - Implementing conditional UI logic based on business rules (role-based pricing, category restrictions)
 - Building responsive, print-aware layouts with plain CSS
+
+## Deploying (GitHub Pages)
+
+1. Push this repository to GitHub
+2. Go to **Settings → Pages**
+3. Under "Build and deployment", select **Deploy from a branch**, choose `main` and `/ (root)`
+4. Your app will be live at `https://<your-username>.github.io/<repo-name>/`
+5. Update the live demo link at the top of this README
 
 ## Running locally
 
