@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Treatment Plan Generator</title>
+<style>
+  :root {
+    --bg: #f7f5f2;
+    --panel: #ffffff;
+    --ink: #20302b;
+    --muted: #6b7670;
+    --accent: #4f7a68;
+    --accent-soft: #e4ede8;
+    --border: #dfe3e0;
+    --warn: #b5651d;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  header {
+    background: var(--accent);
+    color: #fff;
+    padding: 1.5rem 2rem;
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    letter-spacing: 0.02em;
+  }
+
+  header p {
+    margin: 0.25rem 0 0;
+    opacity: 0.85;
+    font-size: 0.9rem;
+  }
+
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+  }
+
+  .panel h2 {
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+    color: var(--accent);
+  }
+
+  label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 0.35rem;
+    color: var(--muted);
+  }
+
+  select, textarea, input {
+    width: 100%;
+    padding: 0.6rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    background: #fff;
+    color: var(--ink);
+  }
+
+  textarea { resize: vertical; min-height: 80px; }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  @media (max-width: 640px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+
+  .field { margin-bottom: 1rem; }
+
+  .treatment-row {
+    display: flex;
+    gap: 0.6rem;
+    margin-bottom: 0.6rem;
+    align-items: center;
+  }
+
+  .treatment-row select { flex: 1; }
+  .treatment-row select.tier-select { flex: 0 0 160px; }
+
+  .btn {
+    border: none;
+    border-radius: 6px;
+    padding: 0.6rem 1.1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-secondary { background: var(--accent-soft); color: var(--accent); }
+  .btn-remove { background: #f4e4e0; color: var(--warn); padding: 0.5rem 0.7rem; }
+  .btn:hover { opacity: 0.85; }
+
+  .actions { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+
+  /* Generated plan styles */
+  #planOutput { display: none; }
+
+  .plan-header {
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .plan-header h2 {
+    color: var(--ink);
+    margin: 0 0 0.25rem;
+  }
+
+  .plan-meta { font-size: 0.85rem; color: var(--muted); }
+
+  .plan-section { margin-bottom: 1.5rem; }
+
+  .plan-section h3 {
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .concern-text {
+    background: var(--accent-soft);
+    border-radius: 6px;
+    padding: 0.8rem 1rem;
+    white-space: pre-wrap;
+    font-size: 0.95rem;
+  }
+
+  .treatment-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .treatment-card h4 {
+    margin: 0 0 0.5rem;
+    font-size: 1.02rem;
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+  }
+
+  .meta-row span strong { color: var(--ink); }
+
+  .proof-list { margin: 0.4rem 0 0; padding-left: 1.2rem; font-size: 0.9rem; }
+
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.95rem;
+    margin-top: 0.6rem;
+    padding-top: 0.6rem;
+    border-top: 1px dashed var(--border);
+  }
+
+  .price-row strong { color: var(--accent); }
+
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.15rem;
+    font-weight: 700;
+    padding-top: 0.75rem;
+    border-top: 2px solid var(--accent);
+    margin-top: 0.5rem;
+  }
+
+  .pain-bar {
+    display: inline-flex;
+    gap: 2px;
+    vertical-align: middle;
+  }
+
+  .pain-bar i {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background: var(--border);
+  }
+
+  .pain-bar i.filled { background: var(--warn); }
+
+  .hint { font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
+
+  @media print {
+    header, #builderPanel, .actions { display: none !important; }
+    #planOutput { display: block !important; }
+    body { background: #fff; }
+  }
+
+  .clinic-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .clinic-logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  .clinic-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: 0.02em;
+  }
+
+  .plan-section .clinic-bar { margin-bottom: 1.25rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="clinic-bar">
+    <img src="logo.svg" alt="" class="clinic-logo" />
+    <span class="clinic-name" style="color:#fff;">Aesthetique Clinic</span>
+  </div>
+  <h1>Treatment Plan Generator</h1>
+  <p>Select treatments, add patient concerns, and generate a clear plan to share.</p>
+</header>
+
+<main>
+  <section class="panel" id="builderPanel">
+    <h2>1. Consultation details</h2>
+
+    <div class="grid-2">
+      <div class="field">
+        <label for="practitionerSelect">Practitioner</label>
+        <select id="practitionerSelect"></select>
+      </div>
+      <div class="field">
+        <label for="patientName">Patient name</label>
+        <input type="text" id="patientName" placeholder="e.g. Jane Tan" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="patientConcerns">Patient concerns</label>
+      <textarea id="patientConcerns" placeholder="Describe what the patient raised during consultation, e.g. fine lines around eyes, uneven skin tone, mild acne scarring on cheeks..."></textarea>
+    </div>
+
+    <h2 style="margin-top:1.5rem;">2. Recommended treatments</h2>
+    <div id="treatmentRows"></div>
+    <button class="btn btn-secondary" id="addTreatmentBtn" type="button">+ Add treatment</button>
+
+    <div class="field" style="margin-top:1.5rem;">
+      <label for="planNotes">Additional notes (optional)</label>
+      <textarea id="planNotes" placeholder="Any extra recommendations, follow-up timing, aftercare instructions..."></textarea>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="generateBtn" type="button">Generate treatment plan</button>
+    </div>
+  </section>
+
+  <section class="panel" id="planOutput">
+    <div class="clinic-bar">
+      <img src="logo.svg" alt="" class="clinic-logo" />
+      <span class="clinic-name">Aesthetique Clinic</span>
+    </div>
+    <div class="plan-header">
+      <h2>Treatment Plan</h2>
+      <div class="plan-meta" id="planMeta"></div>
+    </div>
+
+    <div class="plan-section">
+      <h3>Consultation Summary</h3>
+      <p id="consultSummary"></p>
+    </div>
+
+    <div class="plan-section">
+      <h3>Patient Concerns</h3>
+      <div class="concern-text" id="concernText"></div>
+    </div>
+
+    <div class="plan-section">
+      <h3>Recommended Treatments</h3>
+      <div id="treatmentCards"></div>
+      <div class="total-row">
+        <span>Total estimated price</span>
+        <span id="totalPrice"></span>
+      </div>
+    </div>
+
+    <div class="plan-section" id="notesSection" style="display:none;">
+      <h3>Additional Notes</h3>
+      <p id="notesText"></p>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-secondary" id="printBtn" type="button">Print / Save as PDF</button>
+      <button class="btn btn-secondary" id="editBtn" type="button">Edit plan</button>
+    </div>
+  </section>
+</main>
+
+<script>
+  const TREATMENT_CATALOG = [
+  {
+    id: "tx_001",
+    name: "Microneedling",
+    category: "Skin Rejuvenation",
+    proofPoints: [
+      "Stimulates natural collagen production",
+      "Improves skin texture and tone",
+      "Reduces appearance of fine lines and acne scars"
+    ],
+    painLevel: 3, // 1 (none) - 5 (high)
+    downtime: "1-2 days of redness",
+    duration: "45 min",
+    basePrice: 250
+  },
+  {
+    id: "tx_002",
+    name: "Chemical Peel (Medium Depth)",
+    category: "Skin Rejuvenation",
+    proofPoints: [
+      "Exfoliates damaged outer skin layers",
+      "Improves pigmentation and sun damage",
+      "Smooths rough texture"
+    ],
+    painLevel: 2,
+    downtime: "3-5 days peeling/redness",
+    duration: "30 min",
+    basePrice: 180
+  },
+  {
+    id: "tx_003",
+    name: "Botulinum Toxin (Botox) - Upper Face",
+    category: "Injectables",
+    proofPoints: [
+      "Relaxes muscles to reduce dynamic wrinkles",
+      "Targets forehead, frown lines, crow's feet",
+      "Results visible within 3-7 days"
+    ],
+    painLevel: 2,
+    downtime: "Minimal - possible mild bruising",
+    duration: "20 min",
+    basePrice: 350
+  },
+  {
+    id: "tx_004",
+    name: "Dermal Filler - Lips",
+    category: "Injectables",
+    proofPoints: [
+      "Adds volume and definition to lips",
+      "Hyaluronic acid based, reversible",
+      "Immediate visible results"
+    ],
+    painLevel: 3,
+    downtime: "1-3 days swelling",
+    duration: "30 min",
+    basePrice: 450
+  },
+  {
+    id: "tx_005",
+    name: "Laser Hair Removal (Small Area)",
+    category: "Laser",
+    proofPoints: [
+      "Permanently reduces hair growth over multiple sessions",
+      "Suitable for underarms, upper lip, bikini line",
+      "Quick treatment time"
+    ],
+    painLevel: 2,
+    downtime: "None",
+    duration: "15 min",
+    basePrice: 80
+  },
+  {
+    id: "tx_006",
+    name: "RF Skin Tightening",
+    category: "Body Contouring",
+    proofPoints: [
+      "Stimulates collagen via radiofrequency heat",
+      "Tightens loose or sagging skin",
+      "Non-invasive, no downtime required"
+    ],
+    painLevel: 1,
+    downtime: "None",
+    duration: "45 min",
+    basePrice: 300
+  },
+  {
+    id: "tx_007",
+    name: "HydraFacial",
+    category: "Skin Rejuvenation",
+    proofPoints: [
+      "Cleanses, exfoliates and hydrates in one session",
+      "Suitable for all skin types",
+      "Immediate glow with zero downtime"
+    ],
+    painLevel: 1,
+    downtime: "None",
+    duration: "30 min",
+    basePrice: 200
+  },
+  {
+    id: "tx_008",
+    name: "PRP (Platelet-Rich Plasma) Facial",
+    category: "Regenerative",
+    proofPoints: [
+      "Uses patient's own blood plasma to stimulate healing",
+      "Improves skin texture, tone, and hair growth",
+      "Natural, low allergy risk"
+    ],
+    painLevel: 3,
+    downtime: "1-2 days redness/swelling",
+    duration: "60 min",
+    basePrice: 400
+  }
+];
+
+  const PRACTITIONERS = [
+  {
+    practitionerId: "prac_01",
+    name: "Dr. Jane Doe",
+    pricing: [
+      { treatmentId: "tx_001", practitionerPrice: 280, therapistPrice: 196 },
+      { treatmentId: "tx_002", practitionerPrice: 200, therapistPrice: 140 },
+      { treatmentId: "tx_003", practitionerPrice: 380, therapistPrice: 266 },
+      { treatmentId: "tx_004", practitionerPrice: 480, therapistPrice: 336 },
+      { treatmentId: "tx_005", practitionerPrice: 90,  therapistPrice: 63  },
+      { treatmentId: "tx_006", practitionerPrice: 320, therapistPrice: 224 },
+      { treatmentId: "tx_007", practitionerPrice: 220, therapistPrice: 154 },
+      { treatmentId: "tx_008", practitionerPrice: 420, therapistPrice: 294 }
+    ]
+  },
+  {
+    practitionerId: "prac_02",
+    name: "John Smith",
+    pricing: [
+      { treatmentId: "tx_001", practitionerPrice: 250, therapistPrice: 175 },
+      { treatmentId: "tx_002", practitionerPrice: 180, therapistPrice: 126 },
+      { treatmentId: "tx_003", practitionerPrice: 350, therapistPrice: 245 },
+      { treatmentId: "tx_004", practitionerPrice: 450, therapistPrice: 315 },
+      { treatmentId: "tx_005", practitionerPrice: 80,  therapistPrice: 56  },
+      { treatmentId: "tx_006", practitionerPrice: 300, therapistPrice: 210 },
+      { treatmentId: "tx_007", practitionerPrice: 200, therapistPrice: 140 },
+      { treatmentId: "tx_008", practitionerPrice: 400, therapistPrice: 280 }
+    ]
+  }
+];
+
+  const practitionerSelect = document.getElementById("practitionerSelect");
+  const treatmentRows = document.getElementById("treatmentRows");
+  const addTreatmentBtn = document.getElementById("addTreatmentBtn");
+  const generateBtn = document.getElementById("generateBtn");
+  const printBtn = document.getElementById("printBtn");
+  const editBtn = document.getElementById("editBtn");
+  const builderPanel = document.getElementById("builderPanel");
+  const planOutput = document.getElementById("planOutput");
+
+  // Populate practitioner dropdown
+  PRACTITIONERS.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.practitionerId;
+    opt.textContent = p.name;
+    practitionerSelect.appendChild(opt);
+  });
+
+  // Build a treatment dropdown row
+  function createTreatmentRow() {
+    const row = document.createElement("div");
+    row.className = "treatment-row";
+
+    const select = document.createElement("select");
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "-- Select a treatment --";
+    select.appendChild(placeholder);
+
+    TREATMENT_CATALOG.forEach(t => {
+      const opt = document.createElement("option");
+      opt.value = t.id;
+      opt.textContent = `${t.name} (${t.category})`;
+      select.appendChild(opt);
+    });
+
+    const tierSelect = document.createElement("select");
+    tierSelect.className = "tier-select";
+
+    function refreshTierOptions() {
+      const treatment = TREATMENT_CATALOG.find(t => t.id === select.value);
+      const isInjectable = treatment && treatment.category === "Injectables";
+      tierSelect.innerHTML = "";
+
+      const practitionerOpt = document.createElement("option");
+      practitionerOpt.value = "practitioner";
+      practitionerOpt.textContent = "Practitioner price";
+      tierSelect.appendChild(practitionerOpt);
+
+      if (!isInjectable) {
+        const therapistOpt = document.createElement("option");
+        therapistOpt.value = "therapist";
+        therapistOpt.textContent = "Therapist price";
+        tierSelect.appendChild(therapistOpt);
+      }
+    }
+
+    select.onchange = refreshTierOptions;
+    refreshTierOptions();
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "btn btn-remove";
+    removeBtn.textContent = "✕";
+    removeBtn.onclick = () => row.remove();
+
+    row.appendChild(select);
+    row.appendChild(tierSelect);
+    row.appendChild(removeBtn);
+    treatmentRows.appendChild(row);
+  }
+
+  addTreatmentBtn.onclick = createTreatmentRow;
+  createTreatmentRow(); // start with one row
+
+  function getPricing(practitionerId, treatmentId) {
+    const prac = PRACTITIONERS.find(p => p.practitionerId === practitionerId);
+    if (!prac) return null;
+    return prac.pricing.find(p => p.treatmentId === treatmentId) || null;
+  }
+
+  function painBarHTML(level) {
+    let html = '<span class="pain-bar">';
+    for (let i = 1; i <= 5; i++) {
+      html += `<i class="${i <= level ? 'filled' : ''}"></i>`;
+    }
+    html += '</span>';
+    return html;
+  }
+
+  generateBtn.onclick = () => {
+    const practitionerId = practitionerSelect.value;
+    const practitioner = PRACTITIONERS.find(p => p.practitionerId === practitionerId);
+    const patientName = document.getElementById("patientName").value.trim() || "Unnamed patient";
+    const concerns = document.getElementById("patientConcerns").value.trim();
+    const notes = document.getElementById("planNotes").value.trim();
+
+    const selectedRows = Array.from(treatmentRows.querySelectorAll(".treatment-row"))
+      .map(row => {
+        const selects = row.querySelectorAll("select");
+        return { treatmentId: selects[0].value, tier: selects[1].value };
+      })
+      .filter(r => r.treatmentId);
+
+    if (selectedRows.length === 0) {
+      alert("Please select at least one treatment.");
+      return;
+    }
+
+    // Meta
+    const today = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    document.getElementById("planMeta").textContent =
+      `Patient: ${patientName}  |  Practitioner: ${practitioner.name}  |  Date: ${today}`;
+
+    // Consultation summary
+    const treatmentNames = selectedRows.map(r => TREATMENT_CATALOG.find(t => t.id === r.treatmentId).name);
+    document.getElementById("consultSummary").textContent =
+      `Following today's consultation, ${treatmentNames.length} treatment${treatmentNames.length > 1 ? 's' : ''} ` +
+      `${treatmentNames.length > 1 ? 'have' : 'has'} been recommended to address the concerns discussed: ` +
+      `${treatmentNames.join(", ")}.`;
+
+    // Concerns
+    document.getElementById("concernText").textContent = concerns || "No specific concerns recorded.";
+
+    // Treatment cards
+    const cardsContainer = document.getElementById("treatmentCards");
+    cardsContainer.innerHTML = "";
+    let total = 0;
+
+    selectedRows.forEach(({ treatmentId, tier }) => {
+      const t = TREATMENT_CATALOG.find(t => t.id === treatmentId);
+      const effectiveTier = t.category === "Injectables" ? "practitioner" : tier;
+      const pricing = getPricing(practitionerId, treatmentId);
+      const practitionerPrice = pricing ? pricing.practitionerPrice : t.basePrice;
+      const therapistPrice = pricing ? pricing.therapistPrice : Math.round(t.basePrice * 0.7);
+      const price = effectiveTier === "therapist" ? therapistPrice : practitionerPrice;
+      const tierLabel = effectiveTier === "therapist" ? "Therapist price" : "Practitioner price";
+      total += price;
+
+      const card = document.createElement("div");
+      card.className = "treatment-card";
+      card.innerHTML = `
+        <h4>${t.name}</h4>
+        <div class="meta-row">
+          <span><strong>Category:</strong> ${t.category}</span>
+          <span><strong>Duration:</strong> ${t.duration}</span>
+          <span><strong>Downtime:</strong> ${t.downtime}</span>
+          <span><strong>Pain level:</strong> ${painBarHTML(t.painLevel)}</span>
+        </div>
+        <ul class="proof-list">
+          ${t.proofPoints.map(pt => `<li>${pt}</li>`).join("")}
+        </ul>
+        <div class="price-row">
+          <span>${tierLabel}</span>
+          <strong>£${price.toFixed(2)}</strong>
+        </div>
+      `;
+      cardsContainer.appendChild(card);
+    });
+
+    document.getElementById("totalPrice").textContent = `£${total.toFixed(2)}`;
+
+    // Notes
+    const notesSection = document.getElementById("notesSection");
+    if (notes) {
+      document.getElementById("notesText").textContent = notes;
+      notesSection.style.display = "block";
+    } else {
+      notesSection.style.display = "none";
+    }
+
+    builderPanel.style.display = "none";
+    planOutput.style.display = "block";
+    window.scrollTo(0, 0);
+  };
+
+  printBtn.onclick = () => window.print();
+
+  editBtn.onclick = () => {
+    builderPanel.style.display = "block";
+    planOutput.style.display = "none";
+    window.scrollTo(0, 0);
+  };
+</script>
+
+</body>
+</html>
